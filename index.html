@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f6f3ee">
+  <title>我的菜谱</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="home">
+  <main class="app-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">My Recipes</p>
+        <h1>我的菜谱</h1>
+        <p class="hero-copy">收纳自己做过的菜，也能快速看看今天能做什么。</p>
+      </div>
+    </header>
+
+    <section class="panel">
+      <div class="action-row">
+        <a class="button button-primary" href="add.html">新增菜谱</a>
+        <a class="button" href="can-cook.html">今天能做什么</a>
+        <a class="button" href="pantry.html">我的食材</a>
+      </div>
+
+      <label class="search-field" for="searchInput">
+        <span>搜索菜名或食材</span>
+        <input id="searchInput" type="search" placeholder="例如：鸡蛋">
+      </label>
+    </section>
+
+    <section class="content-section">
+      <div class="section-heading">
+        <h2>全部菜谱</h2>
+        <span id="recipeCount" class="meta-text"></span>
+      </div>
+      <div id="recipeList" class="card-grid"></div>
+      <div id="emptyState" class="empty-state" hidden>
+        <p>还没有菜谱，先添加第一道拿手菜吧。</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/index.js"></script>
+</body>
+</html>

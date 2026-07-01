@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f6f3ee">
+  <title>新增菜谱</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="add">
+  <main class="app-shell">
+    <header class="page-header">
+      <a class="back-link" href="index.html">返回</a>
+      <h1 id="pageTitle">新增菜谱</h1>
+    </header>
+
+    <form id="recipeForm" class="form-card">
+      <label class="field">
+        <span>菜名</span>
+        <input id="recipeName" name="recipeName" type="text" maxlength="30" placeholder="例如：番茄炒蛋" required>
+      </label>
+
+      <label class="field">
+        <span id="imageFieldLabel">菜品图片</span>
+        <input id="recipeImage" name="recipeImage" type="file" accept="image/*">
+      </label>
+
+      <div class="image-preview-wrap">
+        <img id="imagePreview" class="image-preview" src="assets/placeholder.png" alt="图片预览">
+      </div>
+
+      <p id="imageHint" class="helper-text" hidden>不重新上传图片时，将保留原图片。</p>
+
+      <section class="field">
+        <span>食材</span>
+        <div class="inline-entry">
+          <input id="ingredientInput" type="text" maxlength="20" placeholder="输入食材后添加">
+          <button id="addIngredientButton" class="button" type="button">添加</button>
+        </div>
+        <div id="ingredientTags" class="tag-list"></div>
+      </section>
+
+      <button id="submitButton" class="button button-primary button-block" type="submit">保存菜谱</button>
+    </form>
+  </main>
+
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/add.js"></script>
+</body>
+</html>

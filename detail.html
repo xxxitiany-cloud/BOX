@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f6f3ee">
+  <title>菜谱详情</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="detail">
+  <main class="app-shell">
+    <header class="page-header">
+      <a class="back-link" href="index.html">返回</a>
+      <h1>菜谱详情</h1>
+    </header>
+
+    <section id="detailCard" class="detail-card" hidden>
+      <img id="detailImage" class="detail-image" src="assets/placeholder.png" alt="">
+      <div class="detail-content">
+        <div class="detail-header">
+          <h2 id="detailName"></h2>
+          <div class="action-row detail-actions">
+            <a id="editRecipeButton" class="button" href="#">编辑</a>
+            <button id="deleteRecipeButton" class="button button-danger" type="button">删除</button>
+          </div>
+        </div>
+        <div class="section-heading">
+          <h3>食材</h3>
+        </div>
+        <ul id="detailIngredients" class="ingredient-list"></ul>
+      </div>
+    </section>
+
+    <section id="detailEmpty" class="empty-state" hidden>
+      <p>没有找到这道菜谱。</p>
+      <a class="button button-primary" href="index.html">回到首页</a>
+    </section>
+  </main>
+
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/detail.js"></script>
+</body>
+</html>

@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f6f3ee">
+  <title>我的食材</title>
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icons/icon-192.png">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body data-page="pantry">
+  <main class="app-shell">
+    <header class="page-header">
+      <a class="back-link" href="index.html">返回</a>
+      <h1>我的食材</h1>
+    </header>
+
+    <section class="panel">
+      <div class="inline-entry">
+        <input id="pantryInput" type="text" maxlength="20" placeholder="例如：鸡蛋">
+        <button id="addPantryButton" class="button button-primary" type="button">添加</button>
+      </div>
+    </section>
+
+    <section class="content-section">
+      <div class="section-heading">
+        <h2>家里已有食材</h2>
+      </div>
+      <div id="pantryList" class="tag-list tag-list-large"></div>
+      <div id="pantryEmpty" class="empty-state" hidden>
+        <p>先添加一些家里现有的食材吧。</p>
+      </div>
+    </section>
+  </main>
+
+  <script src="js/storage.js"></script>
+  <script src="js/app.js"></script>
+  <script src="js/pantry.js"></script>
+</body>
+</html>
