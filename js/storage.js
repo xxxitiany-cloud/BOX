@@ -1,88 +1,164 @@
 (function () {
-  var RECIPE_KEY = "my-recipes:recipes";
-  var PANTRY_KEY = "my-recipes:pantry";
+  function normalizeRecipe(row) {
+    return {
+      id: row.id,
+      name: row.name,
+      image: row.image,
+      ingredients: Array.isArray(row.ingredients) ? row.ingredients : [],
+      createdAt: row.created_at,
+      workspaceId: row.workspace_id
+    };
+  }
 
-  function readJson(key, fallback) {
-    var raw = localStorage.getItem(key);
+  function normalizePantryRow(row) {
+    return {
+      id: row.id,
+      item: row.item,
+      createdAt: row.created_at,
+      workspaceId: row.workspace_id
+    };
+  }
 
-    if (!raw) {
-      return fallback;
+  async function getRecipes() {
+    var client = window.supabaseClient.getClient();
+    var result = await client
+      .from("recipes")
+      .select("id, name, ingredients, image, created_at, workspace_id")
+      .eq("workspace_id", window.supabaseConfig.workspaceId)
+      .order("created_at", { ascending: false });
+
+    if (result.error) {
+      throw result.error;
     }
 
-    try {
-      return JSON.parse(raw);
-    } catch (error) {
-      return fallback;
+    return result.data.map(normalizeRecipe);
+  }
+
+  async function saveRecipe(recipe) {
+    var client = window.supabaseClient.getClient();
+    var result = await client
+      .from("recipes")
+      .insert([{
+        name: recipe.name,
+        image: recipe.image,
+        ingredients: recipe.ingredients,
+        workspace_id: window.supabaseConfig.workspaceId
+      }])
+      .select("id, name, ingredients, image, created_at, workspace_id")
+      .single();
+
+    if (result.error) {
+      throw result.error;
     }
+
+    return normalizeRecipe(result.data);
   }
 
-  function writeJson(key, value) {
-    localStorage.setItem(key, JSON.stringify(value));
-  }
-
-  function getRecipes() {
-    var recipes = readJson(RECIPE_KEY, []);
-    return Array.isArray(recipes) ? recipes : [];
-  }
-
-  function saveRecipe(recipe) {
-    var recipes = getRecipes();
-    recipes.unshift(recipe);
-    writeJson(RECIPE_KEY, recipes);
-    return recipe;
-  }
-
-  function updateRecipe(recipeId, nextRecipe) {
-    var recipes = getRecipes();
-    var updatedRecipes = recipes.map(function (recipe) {
-      if (recipe.id !== recipeId) {
-        return recipe;
-      }
-
-      return {
-        id: recipe.id,
+  async function updateRecipe(recipeId, nextRecipe) {
+    var client = window.supabaseClient.getClient();
+    var result = await client
+      .from("recipes")
+      .update({
         name: nextRecipe.name,
         image: nextRecipe.image,
-        ingredients: nextRecipe.ingredients,
-        createdAt: recipe.createdAt,
-        updatedAt: Date.now()
-      };
-    });
+        ingredients: nextRecipe.ingredients
+      })
+      .eq("id", recipeId)
+      .eq("workspace_id", window.supabaseConfig.workspaceId)
+      .select("id, name, ingredients, image, created_at, workspace_id")
+      .single();
 
-    writeJson(RECIPE_KEY, updatedRecipes);
-    return updatedRecipes.find(function (recipe) {
-      return recipe.id === recipeId;
-    }) || null;
-  }
-
-  function deleteRecipe(recipeId) {
-    var recipes = getRecipes();
-    var nextRecipes = recipes.filter(function (recipe) {
-      return recipe.id !== recipeId;
-    });
-    var changed = nextRecipes.length !== recipes.length;
-
-    if (changed) {
-      writeJson(RECIPE_KEY, nextRecipes);
+    if (result.error) {
+      throw result.error;
     }
 
-    return changed;
+    return normalizeRecipe(result.data);
   }
 
-  function getRecipeById(id) {
-    return getRecipes().find(function (recipe) {
-      return recipe.id === id;
-    }) || null;
+  async function deleteRecipe(recipeId) {
+    var client = window.supabaseClient.getClient();
+    var result = await client
+      .from("recipes")
+      .delete()
+      .eq("id", recipeId)
+      .eq("workspace_id", window.supabaseConfig.workspaceId);
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    return true;
   }
 
-  function getPantryIngredients() {
-    var items = readJson(PANTRY_KEY, []);
-    return Array.isArray(items) ? items : [];
+  async function getRecipeById(id) {
+    var client = window.supabaseClient.getClient();
+    var result = await client
+      .from("recipes")
+      .select("id, name, ingredients, image, created_at, workspace_id")
+      .eq("id", id)
+      .eq("workspace_id", window.supabaseConfig.workspaceId)
+      .maybeSingle();
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    return result.data ? normalizeRecipe(result.data) : null;
   }
 
-  function savePantryIngredients(items) {
-    writeJson(PANTRY_KEY, items);
-    return items;
+  async function getPantryRecords() {
+    var client = window.supabaseClient.getClient();
+    var result = await client
+      .from("pantry")
+      .select("id, item, created_at, workspace_id")
+      .eq("workspace_id", window.supabaseConfig.workspaceId)
+      .order("created_at", { ascending: true });
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    return result.data.map(normalizePantryRow);
+  }
+
+  async function getPantryIngredients() {
+    var records = await getPantryRecords();
+    return records.map(function (record) {
+      return record.item;
+    });
+  }
+
+  async function addPantryItem(item) {
+    var client = window.supabaseClient.getClient();
+    var result = await client
+      .from("pantry")
+      .insert([{
+        item: item,
+        workspace_id: window.supabaseConfig.workspaceId
+      }])
+      .select("id, item, created_at, workspace_id")
+      .single();
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    return normalizePantryRow(result.data);
+  }
+
+  async function deletePantryItem(id) {
+    var client = window.supabaseClient.getClient();
+    var result = await client
+      .from("pantry")
+      .delete()
+      .eq("id", id)
+      .eq("workspace_id", window.supabaseConfig.workspaceId);
+
+    if (result.error) {
+      throw result.error;
+    }
+
+    return true;
   }
 
   window.storage = {
@@ -91,7 +167,9 @@
     updateRecipe: updateRecipe,
     deleteRecipe: deleteRecipe,
     getRecipeById: getRecipeById,
+    getPantryRecords: getPantryRecords,
     getPantryIngredients: getPantryIngredients,
-    savePantryIngredients: savePantryIngredients
+    addPantryItem: addPantryItem,
+    deletePantryItem: deletePantryItem
   };
 })();

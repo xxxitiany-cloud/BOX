@@ -70,6 +70,33 @@
     });
   }
 
+  function renderBlockingState(options) {
+    var shell = document.querySelector(".app-shell");
+    var actions = options.actions || [];
+    var actionHtml = actions.map(function (action) {
+      var className = action.primary ? "button button-primary" : "button";
+      return '<a class="' + className + '" href="' + escapeHtml(action.href) + '">' + escapeHtml(action.label) + "</a>";
+    }).join("");
+
+    shell.innerHTML =
+      '<section class="panel state-panel">' +
+      '<div class="section-heading state-heading">' +
+      "<h2>" + escapeHtml(options.title) + "</h2>" +
+      "</div>" +
+      '<p class="hero-copy">' + escapeHtml(options.description) + "</p>" +
+      (actionHtml ? '<div class="action-row state-actions">' + actionHtml + "</div>" : "") +
+      "</section>";
+  }
+
+  function parseIngredientsInput(value) {
+    return String(value || "")
+      .split(",")
+      .map(function (item) {
+        return item.trim();
+      })
+      .filter(Boolean);
+  }
+
   function registerServiceWorker() {
     if (!("serviceWorker" in navigator)) {
       return;
@@ -90,6 +117,8 @@
     createId: createId,
     showToast: showToast,
     fileToDataUrl: fileToDataUrl,
-    renderTags: renderTags
+    renderTags: renderTags,
+    renderBlockingState: renderBlockingState,
+    parseIngredientsInput: parseIngredientsInput
   };
 })();

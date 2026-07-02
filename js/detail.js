@@ -1,47 +1,72 @@
 (function () {
   var params = new URLSearchParams(window.location.search);
   var recipeId = params.get("id");
-  var recipe = recipeId ? window.storage.getRecipeById(recipeId) : null;
-
   var detailCard = document.getElementById("detailCard");
   var detailEmpty = document.getElementById("detailEmpty");
 
-  if (!recipe) {
-    detailEmpty.hidden = false;
-    return;
+  function renderRecipe(recipe) {
+    document.getElementById("detailImage").src = recipe.image || "assets/placeholder.png";
+    document.getElementById("detailImage").alt = recipe.name;
+    document.getElementById("detailName").textContent = recipe.name;
+    document.getElementById("editRecipeButton").href = "add.html?id=" + encodeURIComponent(recipe.id);
+
+    var ingredientList = document.getElementById("detailIngredients");
+    ingredientList.innerHTML = "";
+    recipe.ingredients.forEach(function (ingredient) {
+      var item = document.createElement("li");
+      item.textContent = ingredient;
+      ingredientList.appendChild(item);
+    });
+
+    document.getElementById("deleteRecipeButton").addEventListener("click", async function () {
+      var confirmed = window.confirm("确定删除这道菜谱吗？");
+
+      if (!confirmed) {
+        return;
+      }
+
+      try {
+        await window.storage.deleteRecipe(recipe.id);
+        window.app.showToast("菜谱已删除");
+        setTimeout(function () {
+          window.location.href = "index.html";
+        }, 250);
+      } catch (error) {
+        window.app.showToast(error.message || "删除失败，请重试");
+      }
+    });
+
+    detailCard.hidden = false;
   }
 
-  document.getElementById("detailImage").src = recipe.image;
-  document.getElementById("detailImage").alt = recipe.name;
-  document.getElementById("detailName").textContent = recipe.name;
-  document.getElementById("editRecipeButton").href = "add.html?id=" + encodeURIComponent(recipe.id);
+  async function init() {
+    try {
+      var access = await window.auth.requireWorkspaceAccess();
 
-  var ingredientList = document.getElementById("detailIngredients");
-  recipe.ingredients.forEach(function (ingredient) {
-    var item = document.createElement("li");
-    item.textContent = ingredient;
-    ingredientList.appendChild(item);
-  });
+      if (!access) {
+        return;
+      }
 
-  document.getElementById("deleteRecipeButton").addEventListener("click", function () {
-    var confirmed = window.confirm("确定删除这道菜谱吗？");
+      if (!recipeId) {
+        detailEmpty.hidden = false;
+        return;
+      }
 
-    if (!confirmed) {
-      return;
+      var recipe = await window.storage.getRecipeById(recipeId);
+
+      if (!recipe) {
+        detailEmpty.hidden = false;
+        return;
+      }
+
+      renderRecipe(recipe);
+    } catch (error) {
+      window.app.renderBlockingState({
+        title: "加载失败",
+        description: error.message || "读取菜谱详情失败，请稍后重试。"
+      });
     }
+  }
 
-    var deleted = window.storage.deleteRecipe(recipe.id);
-
-    if (!deleted) {
-      window.app.showToast("删除失败，请重试");
-      return;
-    }
-
-    window.app.showToast("菜谱已删除");
-    setTimeout(function () {
-      window.location.href = "index.html";
-    }, 250);
-  });
-
-  detailCard.hidden = false;
+  init();
 })();

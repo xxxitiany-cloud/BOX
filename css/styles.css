@@ -410,6 +410,25 @@ h3 {
   margin-top: -6px;
 }
 
+.state-panel,
+.auth-info {
+  display: grid;
+  gap: 16px;
+}
+
+.state-heading {
+  margin-bottom: 0;
+}
+
+.state-actions,
+.auth-actions {
+  margin-top: 4px;
+}
+
+.auth-copy {
+  margin-top: -4px;
+}
+
 @media (max-width: 560px) {
   .app-shell {
     width: min(calc(100% - 20px), var(--max-width));

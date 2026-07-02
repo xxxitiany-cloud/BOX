@@ -1,11 +1,9 @@
 (function () {
   var params = new URLSearchParams(window.location.search);
   var editingRecipeId = params.get("id");
-  var editingRecipe = editingRecipeId ? window.storage.getRecipeById(editingRecipeId) : null;
 
   var pageTitle = document.getElementById("pageTitle");
   var submitButton = document.getElementById("submitButton");
-  var imageFieldLabel = document.getElementById("imageFieldLabel");
   var imageHint = document.getElementById("imageHint");
   var recipeForm = document.getElementById("recipeForm");
   var recipeNameInput = document.getElementById("recipeName");
@@ -17,6 +15,7 @@
 
   var ingredients = [];
   var imageDataUrl = "";
+  var editingRecipe = null;
 
   function syncTags() {
     window.app.renderTags(ingredientTags, ingredients, function (index) {
@@ -26,20 +25,24 @@
   }
 
   function addIngredient() {
-    var value = ingredientInput.value.trim();
+    var rawValue = ingredientInput.value.trim();
 
-    if (!value) {
+    if (!rawValue) {
       return;
     }
 
-    if (ingredients.includes(value)) {
-      window.app.showToast("这个食材已经添加过了");
-      ingredientInput.value = "";
-      ingredientInput.focus();
+    var items = window.app.parseIngredientsInput(rawValue);
+
+    if (!items.length) {
       return;
     }
 
-    ingredients.push(value);
+    items.forEach(function (item) {
+      if (!ingredients.includes(item)) {
+        ingredients.push(item);
+      }
+    });
+
     ingredientInput.value = "";
     ingredientInput.focus();
     syncTags();
@@ -49,30 +52,12 @@
     document.title = "编辑菜谱";
     pageTitle.textContent = "编辑菜谱";
     submitButton.textContent = "保存修改";
-    imageFieldLabel.textContent = "菜品图片";
     imageHint.hidden = false;
     recipeNameInput.value = recipe.name;
-    imagePreview.src = recipe.image;
-    imageDataUrl = recipe.image;
+    imagePreview.src = recipe.image || "assets/placeholder.png";
+    imageDataUrl = recipe.image || "";
     ingredients = recipe.ingredients.slice();
     syncTags();
-  }
-
-  function init() {
-    if (!editingRecipeId) {
-      recipeImageInput.required = true;
-      return;
-    }
-
-    if (!editingRecipe) {
-      window.app.showToast("没有找到要编辑的菜谱");
-      setTimeout(function () {
-        window.location.href = "index.html";
-      }, 700);
-      return;
-    }
-
-    setEditMode(editingRecipe);
   }
 
   addIngredientButton.addEventListener("click", addIngredient);
@@ -98,13 +83,13 @@
       imageDataUrl = result;
       imagePreview.src = result;
     }).catch(function () {
-      imageDataUrl = editingRecipe ? editingRecipe.image : "";
+      imageDataUrl = editingRecipe ? (editingRecipe.image || "") : "";
       imagePreview.src = imageDataUrl || "assets/placeholder.png";
       window.app.showToast("图片读取失败，请重试");
     });
   });
 
-  recipeForm.addEventListener("submit", function (event) {
+  recipeForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
     var name = recipeNameInput.value.trim();
@@ -124,33 +109,72 @@
       return;
     }
 
-    if (editingRecipe) {
-      window.storage.updateRecipe(editingRecipe.id, {
+    submitButton.disabled = true;
+
+    try {
+      if (editingRecipe) {
+        await window.storage.updateRecipe(editingRecipe.id, {
+          name: name,
+          image: imageDataUrl,
+          ingredients: ingredients.slice()
+        });
+
+        window.app.showToast("菜谱已更新");
+        setTimeout(function () {
+          window.location.href = "detail.html?id=" + encodeURIComponent(editingRecipe.id);
+        }, 500);
+        return;
+      }
+
+      await window.storage.saveRecipe({
         name: name,
         image: imageDataUrl,
         ingredients: ingredients.slice()
       });
 
-      window.app.showToast("菜谱已更新");
+      window.app.showToast("菜谱已保存");
       setTimeout(function () {
-        window.location.href = "detail.html?id=" + encodeURIComponent(editingRecipe.id);
+        window.location.href = "index.html";
       }, 500);
+    } catch (error) {
+      submitButton.disabled = false;
+      window.app.showToast(error.message || "保存失败，请稍后重试");
+    }
+  });
+
+  async function init() {
+    try {
+      var access = await window.auth.requireWorkspaceAccess();
+
+      if (!access) {
+        return;
+      }
+
+      if (!editingRecipeId) {
+        recipeImageInput.required = true;
+        syncTags();
+        return;
+      }
+
+      editingRecipe = await window.storage.getRecipeById(editingRecipeId);
+
+      if (!editingRecipe) {
+        window.app.showToast("没有找到要编辑的菜谱");
+        setTimeout(function () {
+          window.location.href = "index.html";
+        }, 700);
+        return;
+      }
+
+      setEditMode(editingRecipe);
+    } catch (error) {
+      window.app.renderBlockingState({
+        title: "加载失败",
+        description: error.message || "无法初始化当前页面。"
+      });
       return;
     }
-
-    window.storage.saveRecipe({
-      id: window.app.createId(),
-      name: name,
-      image: imageDataUrl,
-      ingredients: ingredients.slice(),
-      createdAt: Date.now()
-    });
-
-    window.app.showToast("菜谱已保存");
-    setTimeout(function () {
-      window.location.href = "index.html";
-    }, 500);
-  });
+  }
 
   syncTags();
   init();

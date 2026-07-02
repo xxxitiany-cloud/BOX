@@ -2,10 +2,8 @@
   var cookList = document.getElementById("cookList");
   var cookEmpty = document.getElementById("cookEmpty");
 
-  function renderCookResults() {
-    var recipes = window.storage.getRecipes();
-    var pantry = window.storage.getPantryIngredients();
-    var pantryMap = pantry.map(function (item) {
+  function renderCookResults(recipes, pantryIngredients) {
+    var pantryMap = pantryIngredients.map(function (item) {
       return window.app.normalizeText(item);
     });
 
@@ -45,5 +43,24 @@
     });
   }
 
-  renderCookResults();
+  async function init() {
+    try {
+      var access = await window.auth.requireWorkspaceAccess();
+
+      if (!access) {
+        return;
+      }
+
+      var recipes = await window.storage.getRecipes();
+      var pantryIngredients = await window.storage.getPantryIngredients();
+      renderCookResults(recipes, pantryIngredients);
+    } catch (error) {
+      window.app.renderBlockingState({
+        title: "加载失败",
+        description: error.message || "无法计算当前可做菜谱。"
+      });
+    }
+  }
+
+  init();
 })();

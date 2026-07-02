@@ -1,12 +1,15 @@
-var CACHE_NAME = "my-recipes-v1";
+var CACHE_NAME = "my-recipes-v2";
 var APP_ASSETS = [
   "./",
   "./index.html",
   "./add.html",
   "./detail.html",
+  "./login.html",
   "./pantry.html",
   "./can-cook.html",
   "./css/styles.css",
+  "./js/supabase-config.js",
+  "./js/auth.js",
   "./js/storage.js",
   "./js/app.js",
   "./js/index.js",
@@ -14,6 +17,7 @@ var APP_ASSETS = [
   "./js/detail.js",
   "./js/pantry.js",
   "./js/can-cook.js",
+  "./js/login.js",
   "./manifest.json",
   "./assets/placeholder.png",
   "./icons/icon-192.png",
