@@ -59,7 +59,7 @@
     } catch (error) {
       window.app.renderBlockingState({
         title: "加载失败",
-        description: error.message || "读取菜谱数据失败，请稍后重试。"
+        description: window.app.getFriendlyErrorMessage(error, "读取菜谱数据失败，请稍后重试。")
       });
     }
   }

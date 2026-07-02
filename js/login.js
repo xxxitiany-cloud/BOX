@@ -1,21 +1,26 @@
 (function () {
   var params = new URLSearchParams(window.location.search);
-  var nextUrl = params.get("next") || "index.html";
+  var nextUrl = "index.html";
   var loginForm = document.getElementById("loginForm");
   var emailInput = document.getElementById("emailInput");
-  var passwordInput = document.getElementById("passwordInput");
   var loginButton = document.getElementById("loginButton");
   var loginInfo = document.getElementById("loginInfo");
 
-  function renderLoggedIn(user) {
+  function renderInfo(title, description, actionsHtml) {
     loginInfo.hidden = false;
     loginInfo.innerHTML =
-      "<h2>当前已登录</h2>" +
-      '<p class="hero-copy auth-copy">' + window.app.escapeHtml(user.email || "已登录用户") + "</p>" +
-      '<div class="action-row auth-actions">' +
-      '<a class="button button-primary" href="' + window.app.escapeHtml(nextUrl) + '">继续进入</a>' +
-      '<button id="signOutButton" class="button" type="button">退出登录</button>' +
-      "</div>";
+      "<h2>" + window.app.escapeHtml(title) + "</h2>" +
+      '<p class="hero-copy auth-copy">' + window.app.escapeHtml(description) + "</p>" +
+      (actionsHtml ? '<div class="action-row auth-actions">' + actionsHtml + "</div>" : "");
+  }
+
+  function renderLoggedIn(user) {
+    renderInfo(
+      "当前已登录",
+      user.email || "已登录用户",
+      '<a class="button button-primary" href="' + window.app.escapeHtml(nextUrl) + '">进入首页</a>' +
+      '<button id="signOutButton" class="button" type="button">退出登录</button>'
+    );
 
     document.getElementById("signOutButton").addEventListener("click", async function () {
       try {
@@ -33,14 +38,15 @@
     loginButton.disabled = true;
 
     try {
-      await window.auth.signInWithPassword(emailInput.value.trim(), passwordInput.value);
-      window.app.showToast("登录成功");
-      setTimeout(function () {
-        window.location.href = nextUrl;
-      }, 300);
+      await window.auth.signInWithOtp(emailInput.value.trim());
+      renderInfo(
+        "登录链接已发送",
+        "请检查邮箱并点击邮件中的登录链接，登录完成后会回到首页。"
+      );
+      window.app.showToast("登录链接已发送");
     } catch (error) {
       loginButton.disabled = false;
-      window.app.showToast(error.message || "登录失败，请检查邮箱和密码");
+      window.app.showToast(error.message || "登录失败，请稍后重试");
     }
   });
 
@@ -49,8 +55,11 @@
       var user = await window.auth.getCurrentUser();
 
       if (user) {
-        renderLoggedIn(user);
+        window.location.href = nextUrl;
+        return;
       }
+      
+      renderInfo("未登录", "请输入邮箱，我们会向你发送一个魔法登录链接。");
     } catch (error) {
       window.app.renderBlockingState({
         title: "初始化失败",

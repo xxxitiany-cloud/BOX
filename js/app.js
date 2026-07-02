@@ -97,6 +97,21 @@
       .filter(Boolean);
   }
 
+  function getFriendlyErrorMessage(error, fallback) {
+    var message = String((error && error.message) || "");
+    var lower = message.toLowerCase();
+
+    if (lower.includes("infinite recursion detected in policy")) {
+      return "当前工作区权限策略配置异常，请先修复 Supabase 的 RLS 策略。";
+    }
+
+    if (lower.includes("row-level security")) {
+      return "你当前没有权限访问这部分数据。";
+    }
+
+    return message || fallback;
+  }
+
   function registerServiceWorker() {
     if (!("serviceWorker" in navigator)) {
       return;
@@ -119,6 +134,7 @@
     fileToDataUrl: fileToDataUrl,
     renderTags: renderTags,
     renderBlockingState: renderBlockingState,
-    parseIngredientsInput: parseIngredientsInput
+    parseIngredientsInput: parseIngredientsInput,
+    getFriendlyErrorMessage: getFriendlyErrorMessage
   };
 })();

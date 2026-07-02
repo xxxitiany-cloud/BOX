@@ -138,7 +138,7 @@
       }, 500);
     } catch (error) {
       submitButton.disabled = false;
-      window.app.showToast(error.message || "保存失败，请稍后重试");
+      window.app.showToast(window.app.getFriendlyErrorMessage(error, "保存失败，请稍后重试"));
     }
   });
 
@@ -170,7 +170,7 @@
     } catch (error) {
       window.app.renderBlockingState({
         title: "加载失败",
-        description: error.message || "无法初始化当前页面。"
+        description: window.app.getFriendlyErrorMessage(error, "无法初始化当前页面。")
       });
       return;
     }

@@ -9,6 +9,11 @@
     return "login.html?next=" + encodeURIComponent(next);
   }
 
+  function isMembershipPolicyError(error) {
+    var message = String((error && error.message) || "").toLowerCase();
+    return message.includes("workspace_members") || message.includes("policy") || message.includes("row-level security");
+  }
+
   async function getSession() {
     var client = window.supabaseClient.getClient();
     var result = await client.auth.getSession();
@@ -55,7 +60,21 @@
       return null;
     }
 
-    var membership = await checkWorkspaceMembership(user.id);
+    var membership;
+
+    try {
+      membership = await checkWorkspaceMembership(user.id);
+    } catch (error) {
+      if (isMembershipPolicyError(error)) {
+        window.app.renderBlockingState({
+          title: "权限校验失败",
+          description: "当前工作区成员策略配置异常，请先修复 Supabase 的 workspace_members RLS。"
+        });
+        return null;
+      }
+
+      throw error;
+    }
 
     if (!membership) {
       window.app.renderBlockingState({
@@ -71,11 +90,13 @@
     };
   }
 
-  async function signInWithPassword(email, password) {
+  async function signInWithOtp(email) {
     var client = window.supabaseClient.getClient();
-    var result = await client.auth.signInWithPassword({
+    var result = await client.auth.signInWithOtp({
       email: email,
-      password: password
+      options: {
+        emailRedirectTo: window.supabaseConfig.emailRedirectTo
+      }
     });
 
     if (result.error) {
@@ -99,7 +120,7 @@
     getSession: getSession,
     getCurrentUser: getCurrentUser,
     requireWorkspaceAccess: requireWorkspaceAccess,
-    signInWithPassword: signInWithPassword,
+    signInWithOtp: signInWithOtp,
     signOut: signOut
   };
 })();

@@ -57,7 +57,7 @@
     } catch (error) {
       window.app.renderBlockingState({
         title: "加载失败",
-        description: error.message || "无法计算当前可做菜谱。"
+        description: window.app.getFriendlyErrorMessage(error, "无法计算当前可做菜谱。")
       });
     }
   }

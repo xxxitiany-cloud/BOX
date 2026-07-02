@@ -32,7 +32,7 @@
           window.location.href = "index.html";
         }, 250);
       } catch (error) {
-        window.app.showToast(error.message || "删除失败，请重试");
+        window.app.showToast(window.app.getFriendlyErrorMessage(error, "删除失败，请重试"));
       }
     });
 
@@ -63,7 +63,7 @@
     } catch (error) {
       window.app.renderBlockingState({
         title: "加载失败",
-        description: error.message || "读取菜谱详情失败，请稍后重试。"
+        description: window.app.getFriendlyErrorMessage(error, "读取菜谱详情失败，请稍后重试。")
       });
     }
   }

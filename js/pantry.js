@@ -29,7 +29,7 @@
           });
           renderPantry();
         } catch (error) {
-          window.app.showToast(error.message || "删除失败，请稍后重试");
+          window.app.showToast(window.app.getFriendlyErrorMessage(error, "删除失败，请稍后重试"));
         }
       });
 
@@ -66,7 +66,7 @@
       pantryInput.focus();
       renderPantry();
     } catch (error) {
-      window.app.showToast(error.message || "添加失败，请稍后重试");
+      window.app.showToast(window.app.getFriendlyErrorMessage(error, "添加失败，请稍后重试"));
     } finally {
       addPantryButton.disabled = false;
     }
@@ -93,7 +93,7 @@
     } catch (error) {
       window.app.renderBlockingState({
         title: "加载失败",
-        description: error.message || "读取食材数据失败，请稍后重试。"
+        description: window.app.getFriendlyErrorMessage(error, "读取食材数据失败，请稍后重试。")
       });
     }
   }
