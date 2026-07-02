@@ -17,6 +17,14 @@
   var imageDataUrl = "";
   var editingRecipe = null;
 
+  function mergeIngredients(items) {
+    items.forEach(function (item) {
+      if (!ingredients.includes(item)) {
+        ingredients.push(item);
+      }
+    });
+  }
+
   function syncTags() {
     window.app.renderTags(ingredientTags, ingredients, function (index) {
       ingredients.splice(index, 1);
@@ -37,14 +45,28 @@
       return;
     }
 
-    items.forEach(function (item) {
-      if (!ingredients.includes(item)) {
-        ingredients.push(item);
-      }
-    });
+    mergeIngredients(items);
 
     ingredientInput.value = "";
     ingredientInput.focus();
+    syncTags();
+  }
+
+  function collectPendingIngredients() {
+    var pendingValue = ingredientInput.value.trim();
+
+    if (!pendingValue) {
+      return;
+    }
+
+    var pendingItems = window.app.parseIngredientsInput(pendingValue);
+
+    if (!pendingItems.length) {
+      return;
+    }
+
+    mergeIngredients(pendingItems);
+    ingredientInput.value = "";
     syncTags();
   }
 
@@ -92,6 +114,8 @@
   recipeForm.addEventListener("submit", async function (event) {
     event.preventDefault();
 
+    collectPendingIngredients();
+
     var name = recipeNameInput.value.trim();
 
     if (!name) {
@@ -113,11 +137,14 @@
 
     try {
       if (editingRecipe) {
-        await window.storage.updateRecipe(editingRecipe.id, {
+        var updatePayload = {
           name: name,
           image: imageDataUrl,
           ingredients: ingredients.slice()
-        });
+        };
+
+        console.log("[recipes.update:submit]", updatePayload);
+        await window.storage.updateRecipe(editingRecipe.id, updatePayload);
 
         window.app.showToast("菜谱已更新");
         setTimeout(function () {
@@ -126,17 +153,27 @@
         return;
       }
 
-      await window.storage.saveRecipe({
+      var createPayload = {
         name: name,
         image: imageDataUrl,
         ingredients: ingredients.slice()
+      };
+
+      console.log("[recipes.insert:submit]", {
+        name: createPayload.name,
+        ingredients: createPayload.ingredients,
+        workspace_id: window.supabaseConfig.workspaceId,
+        hasImage: Boolean(createPayload.image)
       });
+
+      await window.storage.saveRecipe(createPayload);
 
       window.app.showToast("菜谱已保存");
       setTimeout(function () {
         window.location.href = "index.html";
       }, 500);
     } catch (error) {
+      console.log("[recipes.insert:submit:error]", error);
       submitButton.disabled = false;
       window.app.showToast(window.app.getFriendlyErrorMessage(error, "保存失败，请稍后重试"));
     }

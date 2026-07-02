@@ -36,19 +36,30 @@
 
   async function saveRecipe(recipe) {
     var client = window.supabaseClient.getClient();
+    var payload = {
+      name: recipe.name,
+      image: recipe.image,
+      ingredients: Array.isArray(recipe.ingredients) ? recipe.ingredients : [],
+      workspace_id: window.supabaseConfig.workspaceId
+    };
     var result = await client
       .from("recipes")
-      .insert([{
-        name: recipe.name,
-        image: recipe.image,
-        ingredients: recipe.ingredients,
-        workspace_id: window.supabaseConfig.workspaceId
-      }])
+      .insert([payload])
       .select("id, name, ingredients, image, created_at, workspace_id")
       .single();
 
+    console.log("[recipes.insert]", {
+      payload: payload,
+      data: result.data,
+      error: result.error
+    });
+
     if (result.error) {
       throw result.error;
+    }
+
+    if (!result.data) {
+      throw new Error("菜谱写入失败：未返回数据");
     }
 
     return normalizeRecipe(result.data);
